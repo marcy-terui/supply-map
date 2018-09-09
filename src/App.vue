@@ -2,9 +2,11 @@
   <div id="app" class="container-fluid">
     <div class="row">
       <b-navbar class="navbar" toggleable="md" type="dark" variant="info">
-        <b-navbar-brand class="navbarItem" href="#"><h1>災害復旧・供給状況マップ（β）</h1></b-navbar-brand>
+        <b-navbar-brand class="navbarItem" href="#"><h1>災害復旧・供給状況マップ (β)</h1></b-navbar-brand>
         <b-form-select class="navbarItem" v-model="collection" :options="collections" />
-        <b-button class="navbarItem" @click="auth">Login with Google</b-button>
+        <b-form-input class="navbarItem" v-model="searchText" type="text" placeholder="現在地"></b-form-input>
+        <b-button class="navbarItem" variant="primary" @click="search">Search</b-button>
+        <b-button class="navbarItem" variant="secondary" @click="auth">Login with Google</b-button>
         <b-navbar-brand class="navbarItem" v-if="user" href="#">{{user}} さん、ご協力ありがとうございます。</b-navbar-brand>
       </b-navbar>
     </div>
@@ -60,19 +62,21 @@
       <b-tabs class="tabs">
         <b-tab title="お知らせ・更新情報" active>
           <b-list-group>
-            <b-list-group-item>2018-09-09 23:00 - 交通系のカテゴリを追加しました</b-list-group-item>
-            <b-list-group-item>2018-09-09 20:20 - 生鮮食品：乳製品のカテゴリを追加しました</b-list-group-item>
+            <b-list-group-item>2018-09-10 01:20 - 地名検索ボックスを追加しました。空の場合は現在地を検索します。</b-list-group-item>
+            <b-list-group-item>2018-09-09 23:00 - 交通系のカテゴリを追加しました。</b-list-group-item>
+            <b-list-group-item>2018-09-09 20:20 - 生鮮食品：乳製品のカテゴリを追加しました。</b-list-group-item>
             <b-list-group-item>2018-09-09 17:45 - 公開しました！</b-list-group-item>
           </b-list-group>
         </b-tab>
         <b-tab title="使い方・注意事項" >
           <b-list-group>
-            <b-list-group-item>最初に現在地に移動します。位置情報の提供を許可してください。現在地情報は一切保管されません。なかなか移動しない場合はリロードしてみてください。</b-list-group-item>
+            <b-list-group-item>最初に現在地付近に移動します。位置情報の提供を許可してください。現在地情報は一切保管されません。なかなか移動しない場合はリロードしてみてください。</b-list-group-item>
             <b-list-group-item>閲覧は誰にでもできます。いたずらの防止のため、念のため情報の登録はGoogleアカウントによるログインをお願いしています。本サイトでは一切の認証情報を持たないため安心してお使いいただけます。Googleから連携される個人情報は氏名、メールアドレス、プロフィール画像の最低限としておりますが、それらの情報は一切他の目的に流用することはありません。</b-list-group-item>
-            <b-list-group-item>上部のセレクトボックスから知りたい情報を選択してください。新しい種類の情報を追加を希望される場合は簡単にできますので遠慮なく管理者までご依頼ください。現在マップ上の表示領域に存在する情報が自動的に検索されます。表示領域を変えても自動的に追従します。</b-list-group-item>
+            <b-list-group-item>上部のセレクトボックスから知りたい情報を選択してください。新しい情報種別の追加を希望される場合は、簡単にできますので遠慮なく管理者までご依頼ください。現在マップ上の表示領域に存在する情報が自動的に検索されます。表示領域を変えても自動的に追従します。</b-list-group-item>
             <b-list-group-item>情報には３種類のステータスを設けています。マーカーの色が緑「良好」、黄色「注意」、赤色「不可」です。登録時はどれかを選んでください。</b-list-group-item>
-            <b-list-group-item>ログイン状態で地図上のマーカーが無い地点をクリックまたはタップすると新しい情報の登録ができます。</b-list-group-item>
-            <b-list-group-item>既に情報が存在する地点のマーカーを選択すると詳しい情報が閲覧できます。新しい情報を登録する場合は「追加」ボタンを押してください。</b-list-group-item>
+            <b-list-group-item>上部テキストボックスに検索したい地名を入力して「Search」ボタンをクリック(タップ)するとその場所を検索します。何も入力されていない場合は現在地を検索します。</b-list-group-item>
+            <b-list-group-item>ログイン状態で地図上をクリック(タップ)すると新しい情報の登録ができます。</b-list-group-item>
+            <b-list-group-item>既に情報が存在する地点のマーカーを選択すると詳しい情報が閲覧できます。新しい情報を追加する場合は「追加」ボタンを押してください。</b-list-group-item>
             <b-list-group-item>何かご不明な点や不具合のようなものを見つけた場合は管理者までご連絡ください。</b-list-group-item>
           </b-list-group>
         </b-tab>
@@ -92,6 +96,7 @@
 import dateformat from 'dateformat'
 import geoService from './services/geoService'
 import firebaseService from './services/firebaseService'
+import {gmapApi} from 'vue2-google-maps'
 
 const DEFAULT_MARKER_FORM = {
   comment: '',
@@ -154,7 +159,8 @@ export default {
         { value: 'transportation', text: '交通：公共交通機関' },
         { value: 'roads', text: '交通：道路状況' }
       ],
-      user: null
+      user: null,
+      searchText: ''
     }
   },
   methods: {
@@ -179,6 +185,38 @@ export default {
         }
       } else {
         return null
+      }
+    },
+    search () {
+      if (this.searchText === '') {
+        geoService.currentAddress(
+          this.google,
+          this.$refs.mapRef.$mapObject
+        ).then((marker) => {
+          marker.addListener('click', (e) => {
+            this.clickedPosition = {
+              lat: e.latLng.lat(),
+              lng: e.latLng.lng()
+            }
+            this.markerForm = DEFAULT_MARKER_FORM
+            this.$refs.markerModalRef.show()
+          })
+        })
+      } else {
+        geoService.searchAddress(
+          this.google,
+          this.$refs.mapRef.$mapObject,
+          this.searchText
+        ).then((marker) => {
+          marker.addListener('click', (e) => {
+            this.clickedPosition = {
+              lat: e.latLng.lat(),
+              lng: e.latLng.lng()
+            }
+            this.markerForm = DEFAULT_MARKER_FORM
+            this.$refs.markerModalRef.show()
+          })
+        })
       }
     },
     report () {
@@ -263,6 +301,9 @@ export default {
     this.$watch('collection', (val) => {
       this.loadMarkers()
     })
+  },
+  computed: {
+    google: gmapApi
   }
 }
 </script>
