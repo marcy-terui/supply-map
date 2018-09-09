@@ -1,6 +1,5 @@
 # supply-map
-
-> upply information map at the time of disaster
+The supply information map at the time of disaster
 
 ## Build Setup
 
