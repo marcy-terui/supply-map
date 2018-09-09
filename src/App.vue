@@ -60,13 +60,14 @@
       <b-tabs class="tabs">
         <b-tab title="お知らせ・更新情報" active>
           <b-list-group>
+            <b-list-group-item>2018-09-09 20:20 - 「生鮮食品：乳製品」のカテゴリを追加しました</b-list-group-item>
             <b-list-group-item>2018-09-09 17:45 - 公開しました！</b-list-group-item>
           </b-list-group>
         </b-tab>
         <b-tab title="使い方・注意事項" >
           <b-list-group>
             <b-list-group-item>最初に現在地に移動します。位置情報の提供を許可してください。現在地情報は一切保管されません。なかなか移動しない場合はリロードしてみてください。</b-list-group-item>
-            <b-list-group-item>閲覧は誰にでもできます。いたずらの防止のため、念のため情報の登録はGoogleアカウントによるログインをお願いしています。連携される個人情報は氏名、メールアドレス、プロフィール画像の最低限としておりますが、登録された情報は一切他の目的に流用することはありません。</b-list-group-item>
+            <b-list-group-item>閲覧は誰にでもできます。いたずらの防止のため、念のため情報の登録はGoogleアカウントによるログインをお願いしています。本サイトでは一切の認証情報を持たないため安心してお使いいただけます。Googleから連携される個人情報は氏名、メールアドレス、プロフィール画像の最低限としておりますが、それらの情報は一切他の目的に流用することはありません。</b-list-group-item>
             <b-list-group-item>上部のセレクトボックスから知りたい情報を選択してください。新しい種類の情報を追加を希望される場合は簡単にできますので遠慮なく管理者までご依頼ください。現在マップ上の表示領域に存在する情報が自動的に検索されます。表示領域を変えても自動的に追従します。</b-list-group-item>
             <b-list-group-item>情報には３種類のステータスを設けています。マーカーの色が緑「良好」、黄色「注意」、赤色「不可」です。登録時はどれかを選んでください。</b-list-group-item>
             <b-list-group-item>ログイン状態で地図上のマーカーが無い地点をクリックまたはタップすると新しい情報の登録ができます。</b-list-group-item>
@@ -147,7 +148,8 @@ export default {
         { value: 'preserved_foods', text: '保存食類' },
         { value: 'meats', text: '生鮮食品：肉類' },
         { value: 'seafoods', text: '生鮮食品：魚介類' },
-        { value: 'vegetables', text: '生鮮食品：野菜類' }
+        { value: 'vegetables', text: '生鮮食品：野菜類' },
+        { value: 'milk', text: '生鮮食品：乳製品' }
       ],
       user: null
     }
