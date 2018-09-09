@@ -2,7 +2,7 @@
   <div id="app" class="container-fluid">
     <div class="row">
       <b-navbar class="navbar" toggleable="md" type="dark" variant="info">
-        <b-navbar-brand class="navbarItem" href="#"><h1>災害時供給状況マップ（β）</h1></b-navbar-brand>
+        <b-navbar-brand class="navbarItem" href="#"><h1>災害復旧・供給状況マップ（β）</h1></b-navbar-brand>
         <b-form-select class="navbarItem" v-model="collection" :options="collections" />
         <b-button class="navbarItem" @click="auth">Login with Google</b-button>
         <b-navbar-brand class="navbarItem" v-if="user" href="#">{{user}} さん、ご協力ありがとうございます。</b-navbar-brand>
