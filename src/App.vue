@@ -60,7 +60,8 @@
       <b-tabs class="tabs">
         <b-tab title="お知らせ・更新情報" active>
           <b-list-group>
-            <b-list-group-item>2018-09-09 20:20 - 「生鮮食品：乳製品」のカテゴリを追加しました</b-list-group-item>
+            <b-list-group-item>2018-09-09 23:00 - 交通系のカテゴリを追加しました</b-list-group-item>
+            <b-list-group-item>2018-09-09 20:20 - 生鮮食品：乳製品のカテゴリを追加しました</b-list-group-item>
             <b-list-group-item>2018-09-09 17:45 - 公開しました！</b-list-group-item>
           </b-list-group>
         </b-tab>
@@ -78,7 +79,7 @@
         <b-tab title="お問い合わせ・ご要望">
           <b-list-group-item>ご質問やご要望は下記管理者連絡先までご連絡ください。</b-list-group-item>
           <b-list-group-item>Twitter: <b-link href="https://twitter.com/marcy_terui">@marcy_terui</b-link></b-list-group-item>
-          <b-list-group-item>Mail: <b-link href="mailto:supply-map@willy.works">supply-map@willy.works</b-link></b-list-group-item>
+          <b-list-group-item>E-mail: <b-link href="mailto:supply-map@willy.works">supply-map@willy.works</b-link></b-list-group-item>
           <b-list-group-item>フロントエンドが得意ではないので良い感じにしてくれる開発者も歓迎します。</b-list-group-item>
           <b-list-group-item>GitHub: <b-link href="https://github.com/marcy-terui/supply-map">smarcy-terui/supply-map</b-link></b-list-group-item>
         </b-tab>
@@ -149,7 +150,9 @@ export default {
         { value: 'meats', text: '生鮮食品：肉類' },
         { value: 'seafoods', text: '生鮮食品：魚介類' },
         { value: 'vegetables', text: '生鮮食品：野菜類' },
-        { value: 'milk', text: '生鮮食品：乳製品' }
+        { value: 'milk', text: '生鮮食品：乳製品' },
+        { value: 'transportation', text: '交通：公共交通機関' },
+        { value: 'roads', text: '交通：道路状況' }
       ],
       user: null
     }
