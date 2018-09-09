@@ -1,13 +1,13 @@
 <template>
   <div id="app" class="container-fluid">
     <div class="row">
-      <b-navbar class="navbar" toggleable="md" type="dark" variant="info">
+      <b-navbar class="navbar" toggleable="lg" type="dark" variant="info">
         <b-navbar-brand class="navbarItem" href="#"><h1>災害復旧・供給状況マップ (β)</h1></b-navbar-brand>
         <b-form-select class="navbarItem" v-model="collection" :options="collections" />
         <b-form-input class="navbarItem" v-model="searchText" type="text" placeholder="現在地"></b-form-input>
         <b-button class="navbarItem" variant="primary" @click="search">Search</b-button>
         <b-button class="navbarItem" variant="secondary" @click="auth">Login with Google</b-button>
-        <b-navbar-brand class="navbarItem" v-if="user" href="#">{{user}} さん、ご協力ありがとうございます。</b-navbar-brand>
+        <b-navbar-brand class="navbarItem" v-if="user" href="#"><h6>{{user}} さん、ご協力ありがとうございます。</h6></b-navbar-brand>
       </b-navbar>
     </div>
     <gmap-map ref="mapRef"
