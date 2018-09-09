@@ -78,6 +78,8 @@
           <b-list-group-item>ご質問やご要望は下記管理者連絡先までご連絡ください。</b-list-group-item>
           <b-list-group-item>Twitter: <b-link href="https://twitter.com/marcy_terui">@marcy_terui</b-link></b-list-group-item>
           <b-list-group-item>Mail: <b-link href="mailto:supply-map@willy.works">supply-map@willy.works</b-link></b-list-group-item>
+          <b-list-group-item>フロントエンドが得意ではないので良い感じにしてくれる開発者も歓迎します。</b-list-group-item>
+          <b-list-group-item>GitHub: <b-link href="https://github.com/marcy-terui/supply-map">smarcy-terui/supply-map</b-link></b-list-group-item>
         </b-tab>
       </b-tabs>
     </div>
