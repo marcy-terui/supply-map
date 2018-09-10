@@ -62,6 +62,7 @@
       <b-tabs class="tabs">
         <b-tab title="お知らせ・更新情報" active>
           <b-list-group>
+            <b-list-group-item>2018-09-10 11:25 - 弁当・惣菜のカテゴリを追加しました。</b-list-group-item>
             <b-list-group-item>2018-09-10 01:20 - 地名検索ボックスを追加しました。空の場合は現在地を検索します。</b-list-group-item>
             <b-list-group-item>2018-09-09 23:00 - 交通系のカテゴリを追加しました。</b-list-group-item>
             <b-list-group-item>2018-09-09 20:20 - 生鮮食品：乳製品のカテゴリを追加しました。</b-list-group-item>
@@ -152,6 +153,7 @@ export default {
         { value: 'gasoline', text: 'ガソリン' },
         { value: 'drinks', text: '飲料類' },
         { value: 'preserved_foods', text: '保存食類' },
+        { value: 'prepared_foods', text: '弁当・惣菜' },
         { value: 'meats', text: '生鮮食品：肉類' },
         { value: 'seafoods', text: '生鮮食品：魚介類' },
         { value: 'vegetables', text: '生鮮食品：野菜類' },
