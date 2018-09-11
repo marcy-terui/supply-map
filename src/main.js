@@ -1,13 +1,12 @@
 import 'babel-polyfill'
 import Vue from 'vue'
-import BootstrapVue from 'bootstrap-vue'
+import Vuetify from 'vuetify'
 import * as VueGoogleMaps from 'vue2-google-maps'
 import App from './App.vue'
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'vuetify/dist/vuetify.css'
 
+Vue.use(Vuetify)
 Vue.config.productionTip = false
-Vue.use(BootstrapVue)
 Vue.use(VueGoogleMaps, {
   load: {
     key: 'AIzaSyAtnqcd7L1MqAuMhmyWJ0DyYaBQvC9eFAw'

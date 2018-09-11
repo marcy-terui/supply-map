@@ -1,95 +1,282 @@
 <template>
-  <div id="app" class="container-fluid">
-    <div class="row">
-      <b-navbar class="navbar" toggleable="lg" type="dark" variant="info">
-        <b-navbar-brand class="navbarItem" href="#"><h1>災害復旧・供給状況マップ (β)</h1></b-navbar-brand>
-        <b-form-select class="navbarItem" v-model="collection" :options="collections" />
-        <b-form-input class="navbarItem" v-model="searchText" type="text" placeholder="現在地"></b-form-input>
-        <b-button class="navbarItem" variant="primary" @click="search">Search</b-button>
-        <b-button class="navbarItem" variant="secondary" @click="auth">Login with Google</b-button>
-        <b-navbar-brand class="navbarItem" v-if="user" href="#"><h6>{{user}} さん、ご協力ありがとうございます。</h6></b-navbar-brand>
-      </b-navbar>
-    </div>
-    <gmap-map ref="mapRef"
-              id="map"
-              :center="center"
-              :zoom="15">
-      <gmap-info-window :options="infoOptions"
-                        :position="infoWindowPos"
-                        :opened="infoWinOpen"
-                        @closeclick="infoWinOpen=false">
-        <b-list-group>
-          <b-list-group-item v-for="(c,i) in commentInfos" :key="i" :variant="c.color">
-            {{c.status}} {{c.comment}} ({{c.datetime}})
-          </b-list-group-item>
-        </b-list-group>
-        <b-button id="addCommentBtn" variant="primary" @click="addCommentToMarker(infoWindowPos)">追加</b-button>
-      </gmap-info-window>
+  <div id="app">
+    <v-app>
+      <v-content>
+        <v-navigation-drawer
+          fixed
+          v-model="leftDrawer"
+        >
+          <v-toolbar flat>
+            <v-list>
+              <v-list-tile>
+                <v-list-tile-title>
+                  Search
+                </v-list-tile-title>
+              </v-list-tile>
+            </v-list>
+            <v-toolbar-side-icon @click.stop="leftDrawer = !leftDrawer"></v-toolbar-side-icon>
+          </v-toolbar>
+          <v-divider></v-divider>
+          <v-list>
+            <v-list-tile avatar>
+              <v-list-tile-avatar>
+                <v-icon color="primary">list</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-select
+                  :items="collections"
+                  label="カテゴリを選ぶ"
+                  v-model="collection"
+                ></v-select>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile avatar>
+              <v-list-tile-avatar>
+                <v-icon color="primary">find_replace</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-text-field
+                  label="地名を入力"
+                  v-model="searchText"
+                ></v-text-field>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile avatar @click="search">
+              <v-list-tile-avatar>
+                <v-icon color="primary">pin_drop</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-list-tile-title>移動する</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+            <v-list-tile avatar @click="current">
+              <v-list-tile-avatar>
+                <v-icon color="primary">my_location</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-list-tile-title>現在地へ移動する</v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+          </v-list>
+        </v-navigation-drawer>
+        <v-layout row wrap>
+          <v-flex
+            xs12
+            sm12
+            md12
+          >
+            <v-card color="grey lighten-4" flat>
+              <v-toolbar color="primary" dark dense>
+                <v-btn
+                  icon
+                  fab
+                  @click.stop="leftDrawer = !leftDrawer"
+                >
+                  <v-icon>search</v-icon>
+                </v-btn>
+                <v-toolbar-title>{{title}}</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn
+                  icon
+                  fab
+                  @click.stop="rightDrawer = !rightDrawer"
+                >
+                  <v-icon>help</v-icon>
+                </v-btn>
+              </v-toolbar>
+            </v-card>
+          </v-flex>
+          <v-flex
+            xs12
+            sm12
+            md12
+          >
+            <v-card color="grey lighten-4" flat>
+              <v-toolbar dense>
+                <v-toolbar-subtitle>{{userMessage}}</v-toolbar-subtitle>
+                <v-spacer></v-spacer>
+                <v-btn
+                  round
+                  color="primary"
+                  @click="auth"
+                >
+                  Login with Google
+                </v-btn>
+              </v-toolbar>
+            </v-card>
+          </v-flex>
+        </v-layout>
 
-      <gmap-marker :key="i"
-                   v-for="(m,i) in markers"
-                   :position="m.position"
-                   :clickable="true"
-                   :icon="m.icon"
-                   @click="toggleInfoWindow(m,i)">
-      </gmap-marker>
-    </gmap-map>
+        <v-navigation-drawer
+          fixed
+          right
+          v-model="rightDrawer"
+        >
+          <v-toolbar flat>
+            <v-list>
+              <v-list-tile>
+                <v-list-tile-title>
+                  Help
+                </v-list-tile-title>
+              </v-list-tile>
+            </v-list>
+            <v-toolbar-side-icon @click.stop="rightDrawer = !rightDrawer"></v-toolbar-side-icon>
+          </v-toolbar>
+          <v-divider></v-divider>
+          <v-list>
+            <template v-for="(item, i) in sideItems">
+              <v-list-tile
+                :key="i"
+                avatar
+                @click="item.dialog = true"
+              >
+                <v-list-tile-avatar>
+                  <v-icon color="primary">{{ item.icon }}</v-icon>
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                  <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                </v-list-tile-content>
+                <v-dialog :key="'n' + i" v-model="item.dialog" fullscreen hide-overlay transition="dialog-bottom-transition">
+                  <v-card>
+                    <v-toolbar dark color="primary">
+                      <v-btn icon dark @click.native="item.dialog = false">
+                        <v-icon>close</v-icon>
+                      </v-btn>
+                      <v-toolbar-title>{{item.title}}</v-toolbar-title>
+                    </v-toolbar>
+                    <v-list dense three-line>
+                      <template v-for="(d,i) in item.descriptions">
+                        <v-list-tile :key="i">
+                          <v-list-tile-content>
+                            {{d}}
+                          </v-list-tile-content>
+                        </v-list-tile>
+                        <v-divider :key="'d' + i"></v-divider>
+                      </template>
+                    </v-list>
+                  </v-card>
+                </v-dialog>
+              </v-list-tile>
+            </template>
+          </v-list>
+        </v-navigation-drawer>
+        <v-container>
+          <v-alert
+            v-model="alert"
+            dismissible
+            :color="alertType"
+            transition="scale-transition"
+          >
+            {{alertMessage}}
+          </v-alert>
+        </v-container>
+        <v-container>
+          <v-card>
+            <gmap-map ref="mapRef"
+                      id="map"
+                      :center="center"
+                      :zoom="15">
+              <gmap-info-window :options="infoOptions"
+                                :position="infoWindowPos"
+                                :opened="infoWinOpen"
+                                @closeclick="infoWinOpen=false">
+                <v-card>
+                  <v-list subheader>
+                    <v-subheader>コメント</v-subheader>
+                    <v-list-tile
+                      v-for="(c,i) in commentInfos"
+                      :key="i"
+                      avatar
+                      :color="c.color"
+                    >
+                      <v-list-tile-avatar>
+                        <v-icon :color="c.color">{{c.icon}}</v-icon>
+                      </v-list-tile-avatar>
+                      <v-list-tile-content>
+                        <v-list-tile-title>{{c.comment}}</v-list-tile-title>
+                        <v-list-tile-sub-title>{{c.datetime}}</v-list-tile-sub-title>
+                      </v-list-tile-content>
+                    </v-list-tile>
+                  </v-list>
+                </v-card>
+                <div class="text-xs-center">
+                  <v-btn fab small color="primary" @click="addCommentToMarker(infoWindowPos)">
+                    <v-icon dark>add</v-icon>
+                  </v-btn>
+                </div>
+              </gmap-info-window>
 
-    <b-modal ref="markerModalRef" title="報告する" @ok="report()">
-      <div class="d-block text-left">
-        <b-form-group id="markerStatusGroup"
-                      label="状況:"
-                      label-for="markerStatus"
-                      description="状況を選択してください">
-          <b-form-select v-model="markerForm.statusSelected"
-                         :options="markerForm.statusOptions"
-                         class="mb-3" />
-        </b-form-group>
-        <b-form-group id="markerCommentGroup"
-                      label="コメント:"
-                      label-for="markerComment"
-                      description="状況などを入力してください（ex. 「●●がたくさんあります」「▲▲が残り少ないです」「全くありません」）">
-          <b-form-input id="markerComment"
-                        type="text"
-                        v-model="markerForm.comment"
-                        required
-                        placeholder="コメントを入力">
-          </b-form-input>
-        </b-form-group>
-      </div>
-    </b-modal>
-    <div class="row">
-      <b-tabs class="tabs">
-        <b-tab title="お知らせ・更新情報" active>
-          <b-list-group>
-            <b-list-group-item>2018-09-10 11:25 - 弁当・惣菜のカテゴリを追加しました。</b-list-group-item>
-            <b-list-group-item>2018-09-10 01:20 - 地名検索ボックスを追加しました。空の場合は現在地を検索します。</b-list-group-item>
-            <b-list-group-item>2018-09-09 23:00 - 交通系のカテゴリを追加しました。</b-list-group-item>
-            <b-list-group-item>2018-09-09 20:20 - 生鮮食品：乳製品のカテゴリを追加しました。</b-list-group-item>
-            <b-list-group-item>2018-09-09 17:45 - 公開しました！</b-list-group-item>
-          </b-list-group>
-        </b-tab>
-        <b-tab title="使い方・注意事項" >
-          <b-list-group>
-            <b-list-group-item>最初に現在地付近に移動します。位置情報の提供を許可してください。現在地情報は一切保管されません。なかなか移動しない場合はリロードしてみてください。</b-list-group-item>
-            <b-list-group-item>閲覧は誰にでもできます。いたずらの防止のため、念のため情報の登録はGoogleアカウントによるログインをお願いしています。本サイトでは一切の認証情報を持たないため安心してお使いいただけます。Googleから連携される個人情報は氏名、メールアドレス、プロフィール画像の最低限としておりますが、それらの情報は一切他の目的に流用することはありません。</b-list-group-item>
-            <b-list-group-item>上部のセレクトボックスから知りたい情報を選択してください。新しい情報種別の追加を希望される場合は、簡単にできますので遠慮なく管理者までご依頼ください。現在マップ上の表示領域に存在する情報が自動的に検索されます。表示領域を変えても自動的に追従します。</b-list-group-item>
-            <b-list-group-item>情報には３種類のステータスを設けています。マーカーの色が緑「良好」、黄色「注意」、赤色「不可」です。登録時はどれかを選んでください。</b-list-group-item>
-            <b-list-group-item>上部テキストボックスに検索したい地名を入力して「Search」ボタンをクリック(タップ)するとその場所を検索します。何も入力されていない場合は現在地を検索します。</b-list-group-item>
-            <b-list-group-item>ログイン状態で地図上をクリック(タップ)すると新しい情報の登録ができます。</b-list-group-item>
-            <b-list-group-item>既に情報が存在する地点のマーカーを選択すると詳しい情報が閲覧できます。新しい情報を追加する場合は「追加」ボタンを押してください。</b-list-group-item>
-            <b-list-group-item>何かご不明な点や不具合のようなものを見つけた場合は管理者までご連絡ください。</b-list-group-item>
-          </b-list-group>
-        </b-tab>
-        <b-tab title="お問い合わせ・ご要望">
-          <b-list-group-item>ご質問やご要望は下記管理者連絡先までご連絡ください。</b-list-group-item>
-          <b-list-group-item>Twitter: <b-link href="https://twitter.com/marcy_terui">@marcy_terui</b-link></b-list-group-item>
-          <b-list-group-item>E-mail: <b-link href="mailto:supply-map@willy.works">supply-map@willy.works</b-link></b-list-group-item>
-          <b-list-group-item>フロントエンドが得意ではないので良い感じにしてくれる開発者も歓迎します。</b-list-group-item>
-          <b-list-group-item>GitHub: <b-link href="https://github.com/marcy-terui/supply-map">smarcy-terui/supply-map</b-link></b-list-group-item>
-        </b-tab>
-      </b-tabs>
-    </div>
+              <gmap-marker :key="i"
+                          v-for="(m,i) in markers"
+                          :position="m.position"
+                          :clickable="true"
+                          :icon="m.icon"
+                          @click="toggleInfoWindow(m,i)">
+              </gmap-marker>
+            </gmap-map>
+
+            <v-dialog v-model="dialog" persistent max-width="500px">
+              <v-card>
+                <v-card-title>
+                  <span class="headline">状況を報告する</span>
+                </v-card-title>
+                <v-card-text>
+                  <v-container grid-list-md>
+                    <v-layout wrap>
+                      <v-flex xs12>
+                        <v-radio-group v-model="markerForm.statusSelected" :mandatory="false">
+                          <v-radio v-for="(s,i) in markerForm.statusOptions"
+                                  :key="i"
+                                  :color="s.color"
+                                  :label="s.text"
+                                  :value="s.value">
+                          </v-radio>
+                        </v-radio-group>
+                      </v-flex>
+                      <v-flex xs12>
+                        <v-text-field v-model="markerForm.comment" label="コメントを入力してください" type="text" required></v-text-field>
+                      </v-flex>
+                    </v-layout>
+                  </v-container>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" flat @click.native="dialog = false">Close</v-btn>
+                  <v-btn color="blue darken-1" flat @click.native="dialog = false;report()">Save</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-card>
+        </v-container>
+        <v-card color="grey lighten-4" flat>
+          <v-tabs
+            color="primary"
+            dark
+            slider-color="yellow"
+          >
+            <v-tab>
+              お知らせ・更新情報
+            </v-tab>
+            <v-tab-item>
+              <template v-for="(news,i) in newsItems">
+                <v-card :key="i" flat>{{news}}</v-card>
+                <v-divider :key="'d' + i"></v-divider>
+              </template>
+            </v-tab-item>
+            <v-tab>
+              お問い合わせ・ご要望
+            </v-tab>
+            <v-tab-item>
+              <v-card flat>ご質問やご要望は下記管理者連絡先までご連絡ください。</v-card>
+              <v-divider></v-divider>
+              <v-card flat>Twitter: <a target="_blank" href="https://twitter.com/marcy_terui">@marcy_terui</a></v-card>
+              <v-card flat>E-mail: <a target="_blank" href="mailto:supply-map@willy.works">supply-map@willy.works</a></v-card>
+              <v-card flat>GitHub: <a target="_blank" href="https://github.com/marcy-terui/supply-map">marcy-terui/supply-map</a></v-card>
+            </v-tab-item>
+          </v-tabs>
+        </v-card>
+      </v-content>
+    </v-app>
   </div>
 </template>
 
@@ -103,19 +290,19 @@ const DEFAULT_MARKER_FORM = {
   comment: '',
   statusSelected: 'good',
   statusOptions: [
-    { text: '✅ 良好', value: 'good' },
-    { text: '⚠️ 注意', value: 'warn' },
-    { text: '🚫 不可', value: 'ng' }
+    { text: '良好○', value: 'good', color: 'success' },
+    { text: '注意△', value: 'warn', color: 'warning' },
+    { text: '不可✕', value: 'ng', color: 'error' }
   ],
-  statusEmoticons: {
-    'good': '✅',
-    'warn': '⚠️',
-    'ng': '🚫'
+  statusIcons: {
+    'good': 'panorama_fish_eye',
+    'warn': 'warning',
+    'ng': 'clear'
   },
   statusColors: {
     'good': 'success',
     'warn': 'warning',
-    'ng': 'danger'
+    'ng': 'error'
   },
   markerColors: {
     'good': '#008000',
@@ -128,7 +315,53 @@ export default {
   name: 'app',
   data () {
     return {
-      logged: false,
+      title: '災害復旧・供給状況マップ (β)',
+      sideItems: [{
+        icon: 'info',
+        title: '使い方・注意事項',
+        descriptions: [
+          '最初に現在地付近に移動します。位置情報の提供を許可してください。なかなか移動しない場合はリロードしてみてください。',
+          '閲覧は誰にでもできます。いたずらの防止のため、念のため情報の登録はGoogleアカウントによるログイン(Login with Google)をお願いしています。',
+          '虫眼鏡のアイコンをクリック(タップ)するとメニューが開きます。',
+          '左メニューのセレクトボックスから知りたい情報を選択してください。 ',
+          '現在マップ上の表示領域に存在する情報が自動的に検索されます。表示領域を変えても自動的に追従します。',
+          '情報には３種類のステータスを設けています。マーカーの色が緑「良好」、黄色「注意」、赤色「不可」です。登録時はどれかを選んでください。',
+          '左メニューのテキストボックスに検索したい地名を入力して「移動する」ボタンをクリック(タップ)するとその場所を検索します。',
+          '「現在地げ移動する」ボタンをクリック(タップ)すると現在地を検索します。',
+          'ログイン状態で地図上をクリック(タップ)すると新しい情報の登録ができます。',
+          '既に情報が存在する地点のマーカーを選択すると詳しい情報が閲覧できます。',
+          '既に情報が存在する地点に新しい情報を追加する場合は「+」ボタンを押してください。',
+          '何かご不明な点や不具合のようなものを見つけた場合は管理者までご連絡ください。'
+        ],
+        dialog: false
+      },
+      {
+        icon: 'question_answer',
+        title: 'よくあるご質問',
+        descriptions: [
+          'Q. 使い方が分かりません。 A. 「使い方・注意事項」のメニューをご確認いただき、分からなければ管理者（サイト下部に記載）にお気軽にお声がけください。',
+          'Q. 使いづらい。 A. 是非、開発者（サイト下部に記載）にフィードバックしてあげてください！',
+          'Q. ほしい情報のカテゴリがありません。 A. 新しいカテゴリの追加は簡単にできますので遠慮なく管理者までご依頼ください。',
+          'Q. 開発に参加できますか？ A. 是非お願いします！開発者（サイト下部に記載）にまでご連絡ください！',
+          'Q. このサイトを宣伝しても良いですか？ A. はい。是非お願いします。',
+          'Q. このサイトは誰によって運営されていますか？ A. 個人によって運営されています。サイト下部のお問い合わせ情報を参照してください。',
+          'Q. このサイトは安全ですか？ A. はい。セキュリティには気を使って開発しています。',
+          'Q. 個人情報の管理はどうなっていますか？ A. このサイトでは一切の個人情報と認証情報を持たず、サーバも持たず、Googleのサービスとの連携のみによって全て機能が実現されています。',
+          'Q. このサイトは具体的に何のサービスで作られていますか？ A. Google Maps Javascript API, Firebase, Firestoreになります。',
+          'Q. このサイトは具体的に何のフレームワークで作られていますか？ A. Vue.js, Vuetify。いわゆる2-TierなサーバーレスSPAです。'
+        ],
+        dialog: false
+      }],
+      newsItems: [
+        '2018-09-11 00:00 - デザインを抜本的に見直しました。サイトの使い方は左上のメニューボタンからご確認いただけます。',
+        '2018-09-10 01:20 - 地名検索ボックスを追加しました。空の場合は現在地を検索します。',
+        '2018-09-09 23:00 - 交通系のカテゴリを追加しました。',
+        '2018-09-09 20:20 - 生鮮食品：乳製品のカテゴリを追加しました。',
+        '2018-09-09 17:45 - 公開しました！'
+      ],
+      dialog: false,
+      leftDrawer: false,
+      rightDrawer: false,
       center: {
         lat: 43.061049,
         lng: 141.356449
@@ -161,8 +394,11 @@ export default {
         { value: 'transportation', text: '交通：公共交通機関' },
         { value: 'roads', text: '交通：道路状況' }
       ],
-      user: null,
-      searchText: ''
+      userMessage: '情報の登録のためにはログインが必要です',
+      searchText: '',
+      alert: true,
+      alertType: 'info',
+      alertMessage: '使い方は右の？マークのメニューからご確認いただけます。'
     }
   },
   methods: {
@@ -190,21 +426,7 @@ export default {
       }
     },
     search () {
-      if (this.searchText === '') {
-        geoService.currentAddress(
-          this.google,
-          this.$refs.mapRef.$mapObject
-        ).then((marker) => {
-          marker.addListener('click', (e) => {
-            this.clickedPosition = {
-              lat: e.latLng.lat(),
-              lng: e.latLng.lng()
-            }
-            this.markerForm = DEFAULT_MARKER_FORM
-            this.$refs.markerModalRef.show()
-          })
-        })
-      } else {
+      if (this.searchText !== '') {
         geoService.searchAddress(
           this.google,
           this.$refs.mapRef.$mapObject,
@@ -216,10 +438,25 @@ export default {
               lng: e.latLng.lng()
             }
             this.markerForm = DEFAULT_MARKER_FORM
-            this.$refs.markerModalRef.show()
+            this.dialog = true
           })
         })
       }
+    },
+    current () {
+      geoService.currentAddress(
+        this.google,
+        this.$refs.mapRef.$mapObject
+      ).then((marker) => {
+        marker.addListener('click', (e) => {
+          this.clickedPosition = {
+            lat: e.latLng.lat(),
+            lng: e.latLng.lng()
+          }
+          this.markerForm = DEFAULT_MARKER_FORM
+          this.dialog = true
+        })
+      })
     },
     report () {
       firebaseService.addReport(
@@ -230,10 +467,20 @@ export default {
         this.markerForm.statusSelected
       ).then((msg) => {
         this.loadMarkers()
-        alert(msg)
+        this.alertSuccess(msg)
       }).catch((msg) => {
-        alert('登録に失敗しました。ログインしていない場合はログインをお願いします。')
+        this.alertError('登録に失敗しました。ログインしていない場合はログインをお願いします。')
       })
+    },
+    alertSuccess (msg) {
+      this.alert = true
+      this.alertType = 'success'
+      this.alertMessage = msg
+    },
+    alertError (msg) {
+      this.alert = true
+      this.alertType = 'error'
+      this.alertMessage = msg
     },
     loadMarkers () {
       this.markers = []
@@ -257,9 +504,10 @@ export default {
             commentInfos: data.comments.map((c) => {
               let dt = dateformat(c.timestamp.toDate(), 'yyyy-mm-dd hh:MM:ss')
               return {
-                status: this.markerForm.statusEmoticons[c.status],
+                status: c.status,
                 comment: c.comment,
                 datetime: dt,
+                icon: this.markerForm.statusIcons[c.status],
                 color: this.markerForm.statusColors[c.status]
               }
             }),
@@ -274,7 +522,7 @@ export default {
     addCommentToMarker (pos) {
       this.clickedPosition = pos
       this.markerForm = DEFAULT_MARKER_FORM
-      this.$refs.markerModalRef.show()
+      this.dialog = true
     }
   },
   async mounted () {
@@ -286,10 +534,14 @@ export default {
         lng: e.latLng.lng()
       }
       this.markerForm = DEFAULT_MARKER_FORM
-      this.$refs.markerModalRef.show()
+      this.dialog = true
     })
 
     this.$refs.mapRef.$mapObject.addListener('center_changed', (e) => {
+      this.loadMarkers()
+    })
+
+    this.$refs.mapRef.$mapObject.addListener('bounds_changed', (e) => {
       this.loadMarkers()
     })
 
@@ -298,7 +550,11 @@ export default {
       lng: position.coords.longitude
     }
 
-    this.user = this.getCurrentUserName()
+    const userName = this.getCurrentUserName()
+
+    if (userName != null) {
+      this.userMessage = `${userName} さん、ご協力ありがとうございます！`
+    }
 
     this.$watch('collection', (val) => {
       this.loadMarkers()
@@ -311,9 +567,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-h1 {
-  font-size: x-large
-}
 #map {
   position: relative;
   width: 100%;
@@ -321,16 +574,10 @@ h1 {
   margin: 0;
   padding: 0
 }
-#addCommentBtn {
-  margin-top: 4px
+.title {
+  font-size: medium
 }
-.navbar {
-  width: 100%
-}
-.tabs {
-  width: 100%
-}
-.navbarItem {
+.toolbarItem {
   margin: 5px;
   width: auto;
 }
