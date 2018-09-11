@@ -64,7 +64,7 @@ export default {
               status: status
             })
             if (data.comments.length > 5) {
-              data.comments = data.comments.slice(5)
+              data.comments = data.comments.slice(0, 5)
             }
             data.status = status
             firestore.collection(collection).doc(doc.id).set(data).then(() => {
