@@ -7,6 +7,9 @@
           v-model="leftDrawer"
         >
           <v-toolbar flat>
+            <v-btn icon @click.stop="leftDrawer = !leftDrawer">
+              <v-icon @click.stop="leftDrawer = !leftDrawer">arrow_back</v-icon>
+            </v-btn>
             <v-list>
               <v-list-tile>
                 <v-list-tile-title>
@@ -14,22 +17,9 @@
                 </v-list-tile-title>
               </v-list-tile>
             </v-list>
-            <v-toolbar-side-icon @click.stop="leftDrawer = !leftDrawer"></v-toolbar-side-icon>
           </v-toolbar>
           <v-divider></v-divider>
           <v-list>
-            <v-list-tile avatar>
-              <v-list-tile-avatar>
-                <v-icon color="primary">list</v-icon>
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-select
-                  :items="collections"
-                  label="カテゴリを選ぶ"
-                  v-model="collection"
-                ></v-select>
-              </v-list-tile-content>
-            </v-list-tile>
             <v-list-tile avatar>
               <v-list-tile-avatar>
                 <v-icon color="primary">find_replace</v-icon>
@@ -41,7 +31,7 @@
                 ></v-text-field>
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile avatar @click="search">
+            <v-list-tile avatar @click.stop="search();leftDrawer = !leftDrawer">
               <v-list-tile-avatar>
                 <v-icon color="primary">pin_drop</v-icon>
               </v-list-tile-avatar>
@@ -49,7 +39,7 @@
                 <v-list-tile-title>移動する</v-list-tile-title>
               </v-list-tile-content>
             </v-list-tile>
-            <v-list-tile avatar @click="current">
+            <v-list-tile avatar @click.stop="current();leftDrawer = !leftDrawer">
               <v-list-tile-avatar>
                 <v-icon color="primary">my_location</v-icon>
               </v-list-tile-avatar>
@@ -65,8 +55,8 @@
             sm12
             md12
           >
-            <v-card color="grey lighten-4" flat>
-              <v-toolbar color="primary" dark dense>
+            <v-card flat>
+              <v-toolbar color="primary" dark>
                 <v-btn
                   icon
                   fab
@@ -74,7 +64,10 @@
                 >
                   <v-icon>search</v-icon>
                 </v-btn>
-                <v-toolbar-title>{{title}}</v-toolbar-title>
+                <v-toolbar-title>
+                  {{title}}
+                  <div class="subheading">The supply information map at the time of disaster</div>
+                </v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-btn
                   icon
@@ -89,19 +82,51 @@
           <v-flex
             xs12
             sm12
-            md12
+            md4
           >
-            <v-card color="grey lighten-4" flat>
+            <v-card flat>
               <v-toolbar dense>
+                <v-icon color="primary">list</v-icon>
+                <v-spacer></v-spacer>
+                <v-select
+                  :items="collections"
+                  v-model="collection"
+                  dense
+                ></v-select>
+                <v-spacer></v-spacer>
+              </v-toolbar>
+            </v-card>
+          </v-flex>
+          <v-flex
+            xs12
+            sm12
+            md4
+          >
+            <v-card flat>
+              <v-toolbar dense>
+                <v-spacer></v-spacer>
                 <v-toolbar-title class="body-2">{{userMessage}}</v-toolbar-title>
+                <v-spacer></v-spacer>
+              </v-toolbar>
+            </v-card>
+          </v-flex>
+          <v-flex
+            xs12
+            sm12
+            md4
+          >
+            <v-card flat>
+              <v-toolbar dense>
                 <v-spacer></v-spacer>
                 <v-btn
                   round
                   color="primary"
                   @click="auth"
+                  :disabled="logged"
                 >
                   Login with Google
                 </v-btn>
+                <v-spacer></v-spacer>
               </v-toolbar>
             </v-card>
           </v-flex>
@@ -120,7 +145,9 @@
                 </v-list-tile-title>
               </v-list-tile>
             </v-list>
-            <v-toolbar-side-icon @click.stop="rightDrawer = !rightDrawer"></v-toolbar-side-icon>
+            <v-btn icon @click.stop="rightDrawer = !rightDrawer">
+              <v-icon>arrow_forward</v-icon>
+            </v-btn>
           </v-toolbar>
           <v-divider></v-divider>
           <v-list>
@@ -293,9 +320,9 @@ const DEFAULT_MARKER_FORM = {
   comment: '',
   statusSelected: 'good',
   statusOptions: [
-    { text: '良好○', value: 'good', color: 'success' },
-    { text: '注意△', value: 'warn', color: 'warning' },
-    { text: '不可✕', value: 'ng', color: 'error' }
+    { text: '○良好 (Good)', value: 'good', color: 'success' },
+    { text: '△注意 (Warning)', value: 'warn', color: 'warning' },
+    { text: '✕不可 (Bad)', value: 'ng', color: 'error' }
   ],
   statusIcons: {
     'good': 'panorama_fish_eye',
@@ -318,7 +345,7 @@ export default {
   name: 'app',
   data () {
     return {
-      title: '災害復旧・供給状況マップ (β)',
+      title: '災害復旧供給状況マップ (β)',
       sideItems: [{
         icon: 'info',
         title: '使い方・注意事項',
@@ -356,6 +383,7 @@ export default {
         dialog: false
       }],
       newsItems: [
+        '2018-09-11 19:15 - UIを大幅に改善しました。',
         '2018-09-11 00:00 - デザインを抜本的に見直しました。サイトの使い方は右上のヘルプメニューボタンからご確認いただけます。',
         '2018-09-10 01:20 - 地名検索ボックスと現在地検索を追加しました。左上の検索メニューからお使いいただけます。',
         '2018-09-09 23:00 - 交通系のカテゴリを追加しました。',
@@ -398,6 +426,7 @@ export default {
         { value: 'roads', text: '交通：道路状況' }
       ],
       userMessage: '情報の登録のためにはログインが必要です',
+      logged: false,
       searchText: '',
       alert: true,
       alertType: 'info',
@@ -549,6 +578,7 @@ export default {
 
     const userName = this.getCurrentUserName()
     if (userName != null) {
+      this.logged = true
       this.userMessage = `${userName} さん、ご協力ありがとうございます！`
     }
   },
