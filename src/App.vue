@@ -93,7 +93,7 @@
           >
             <v-card color="grey lighten-4" flat>
               <v-toolbar dense>
-                <v-toolbar-subtitle>{{userMessage}}</v-toolbar-subtitle>
+                <v-toolbar-title class="body-2">{{userMessage}}</v-toolbar-title>
                 <v-spacer></v-spacer>
                 <v-btn
                   round
@@ -172,14 +172,17 @@
         </v-container>
         <v-container>
           <v-card>
-            <gmap-map ref="mapRef"
-                      id="map"
-                      :center="center"
-                      :zoom="15">
-              <gmap-info-window :options="infoOptions"
-                                :position="infoWindowPos"
-                                :opened="infoWinOpen"
-                                @closeclick="infoWinOpen=false">
+            <GmapMap ref="mapRef"
+                     id="map"
+                     :center="center"
+                     :zoom="15"
+                     @click="addMarker"
+                     @center_changed="loadMarkers"
+                     @bounds_changed="loadMarkers">
+              <GmapInfoWindow :options="infoOptions"
+                               :position="infoWindowPos"
+                               :opened="infoWinOpen"
+                               @closeclick="infoWinOpen=false">
                 <v-card>
                   <v-list subheader>
                     <v-subheader>コメント</v-subheader>
@@ -204,16 +207,16 @@
                     <v-icon dark>add</v-icon>
                   </v-btn>
                 </div>
-              </gmap-info-window>
+              </GmapInfoWindow>
 
-              <gmap-marker :key="i"
+              <GmapMarker :key="i"
                           v-for="(m,i) in markers"
                           :position="m.position"
                           :clickable="true"
                           :icon="m.icon"
                           @click="toggleInfoWindow(m,i)">
-              </gmap-marker>
-            </gmap-map>
+              </GmapMarker>
+            </GmapMap>
 
             <v-dialog v-model="dialog" persistent max-width="500px">
               <v-card>
@@ -523,33 +526,18 @@ export default {
       this.clickedPosition = pos
       this.markerForm = DEFAULT_MARKER_FORM
       this.dialog = true
-    }
-  },
-  async mounted () {
-    const position = await geoService.getCurrentPosition()
-
-    this.$refs.mapRef.$mapObject.addListener('click', (e) => {
+    },
+    addMarker (e) {
       this.clickedPosition = {
         lat: e.latLng.lat(),
         lng: e.latLng.lng()
       }
       this.markerForm = DEFAULT_MARKER_FORM
       this.dialog = true
-    })
-
-    this.$refs.mapRef.$mapObject.addListener('center_changed', (e) => {
-      this.loadMarkers()
-    })
-
-    this.$refs.mapRef.$mapObject.addListener('bounds_changed', (e) => {
-      this.loadMarkers()
-    })
-
-    this.center = {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude
     }
-
+  },
+  async mounted () {
+    const position = await geoService.getCurrentPosition()
     const userName = this.getCurrentUserName()
 
     if (userName != null) {
@@ -559,6 +547,11 @@ export default {
     this.$watch('collection', (val) => {
       this.loadMarkers()
     })
+
+    this.center = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude
+    }
   },
   computed: {
     google: gmapApi
