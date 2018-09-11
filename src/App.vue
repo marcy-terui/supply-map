@@ -86,13 +86,15 @@
           >
             <v-card flat>
               <v-toolbar dense>
-                <v-icon color="primary">list</v-icon>
                 <v-spacer></v-spacer>
-                <v-select
-                  :items="collections"
-                  v-model="collection"
-                  dense
-                ></v-select>
+                <v-btn
+                  round
+                  color="primary"
+                  @click="auth"
+                  :disabled="logged"
+                >
+                  Login with Google
+                </v-btn>
                 <v-spacer></v-spacer>
               </v-toolbar>
             </v-card>
@@ -117,15 +119,13 @@
           >
             <v-card flat>
               <v-toolbar dense>
+                <v-icon color="primary">list</v-icon>
                 <v-spacer></v-spacer>
-                <v-btn
-                  round
-                  color="primary"
-                  @click="auth"
-                  :disabled="logged"
-                >
-                  Login with Google
-                </v-btn>
+                <v-select
+                  :items="collections"
+                  v-model="collection"
+                  dense
+                ></v-select>
                 <v-spacer></v-spacer>
               </v-toolbar>
             </v-card>
