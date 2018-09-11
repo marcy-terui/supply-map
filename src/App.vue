@@ -537,20 +537,19 @@ export default {
     }
   },
   async mounted () {
-    const position = await geoService.getCurrentPosition()
-    const userName = this.getCurrentUserName()
-
-    if (userName != null) {
-      this.userMessage = `${userName} さん、ご協力ありがとうございます！`
-    }
-
     this.$watch('collection', (val) => {
       this.loadMarkers()
     })
 
+    const position = await geoService.getCurrentPosition()
     this.center = {
       lat: position.coords.latitude,
       lng: position.coords.longitude
+    }
+
+    const userName = this.getCurrentUserName()
+    if (userName != null) {
+      this.userMessage = `${userName} さん、ご協力ありがとうございます！`
     }
   },
   computed: {
