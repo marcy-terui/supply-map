@@ -91,7 +91,7 @@
                   round
                   color="primary"
                   @click="auth"
-                  :disabled="logged"
+                  :disabled="isLogged()"
                 >
                   Login with Google
                 </v-btn>
@@ -107,7 +107,7 @@
             <v-card flat>
               <v-toolbar dense>
                 <v-spacer></v-spacer>
-                <v-toolbar-title class="body-2">{{userMessage}}</v-toolbar-title>
+                <v-toolbar-title class="body-2">{{getUserMessage()}}</v-toolbar-title>
                 <v-spacer></v-spacer>
               </v-toolbar>
             </v-card>
@@ -425,12 +425,10 @@ export default {
         { value: 'transportation', text: '交通：公共交通機関' },
         { value: 'roads', text: '交通：道路状況' }
       ],
-      userMessage: '情報の登録のためにはログインが必要です',
-      logged: false,
       searchText: '',
       alert: true,
       alertType: 'info',
-      alertMessage: '使い方は右の？マークのメニューからご確認いただけます。'
+      alertMessage: '使い方は右の？マークのヘルプメニューからご確認いただけます。'
     }
   },
   methods: {
@@ -446,6 +444,16 @@ export default {
     },
     auth () {
       firebaseService.auth()
+    },
+    isLogged () {
+      return (this.getCurrentUserName() != null)
+    },
+    getUserMessage () {
+      const userName = this.getCurrentUserName()
+      if (userName != null) {
+        return `${userName} さん、ご協力ありがとうございます！`
+      }
+      return '情報の登録のためにはログインが必要です'
     },
     getCurrentUserName () {
       const user = firebaseService.getCurrentUser()
@@ -570,17 +578,15 @@ export default {
       this.loadMarkers()
     })
 
-    const position = await geoService.getCurrentPosition()
-    this.center = {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude
-    }
-
-    const userName = this.getCurrentUserName()
-    if (userName != null) {
-      this.logged = true
-      this.userMessage = `${userName} さん、ご協力ありがとうございます！`
-    }
+    geoService.getCurrentPosition().then((position) => {
+      this.center = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      }
+    }).catch((error) => {
+      console.error('Error get current posision: ', error)
+      this.alertError('位置情報の取得に失敗しました。ブラウザまたはOSの設定をご確認ください。')
+    })
   },
   computed: {
     google: gmapApi
